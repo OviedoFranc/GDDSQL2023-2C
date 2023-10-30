@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------------------------ MIGRACION 1 DE 3 
 CREATE PROC MigrarInmueble AS
 
-        --- Normalizacion de datos
+        --- Carga de tablas transaccionales
         INSERT INTO DATA_TEAM.Barrio (BARRIO)
             SELECT DISTINCT INMUEBLE_BARRIO
             FROM gd_esquema.Maestra
@@ -44,6 +44,7 @@ CREATE PROC MigrarInmueble AS
             WHERE INMUEBLE_DISPOSICION IS NOT NULL AND 
                 NOT EXISTS (SELECT 1 FROM DATA_TEAM.Disposicion d WHERE d.DISPOSICION = gd_esquema.Maestra.INMUEBLE_DISPOSICION);
 
+    -- Carga de la tabla "Inmueble"
 	INSERT INTO DATA_TEAM.Inmueble 
     (
         INMUEBLE_CODIGO,
@@ -295,13 +296,17 @@ CREATE PROC MigrarVenta AS
         VENTA_FECHA,
         VENTA_PRECIO_VENTA,
         VENTA_COMISION,
-        VENTA_MONEDA
+        VENTA_MONEDA,
+        VENTA_ANUNCIO,
+        VENTA_COMPRADOR
     ) SELECT DISTINCT
         m.VENTA_CODIGO,
         m.VENTA_FECHA,
         m.VENTA_PRECIO_VENTA,
         m.VENTA_COMISION,
-        m.VENTA_MONEDA
+        m.VENTA_MONEDA,
+        m.ANUNCIO_CODIGO,
+        m.COMPRADOR_DNI
         FROM gd_esquema.Maestra  m
         WHERE 
             m.ANUNCIO_CODIGO IS NOT NULL AND 
