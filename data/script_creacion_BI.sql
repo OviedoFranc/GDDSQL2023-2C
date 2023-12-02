@@ -383,6 +383,40 @@ BEGIN
 END
 GO
 
+CREATE PROC DATA_TEAM.MIGRAR_H_ALQUILER AS
+BEGIN
+	INSERT INTO DATA_TEAM.BI_H_ALQUILER(
+		ALQUILER_SUCURSAL,
+		ALQUILER_BARRIO,
+		ALQUILER_RANGO_ETARIO,
+		ALQUILER_MONEDA,
+		ALQUILER_TIPO_OPERACION,
+		ALQUILER_ANIO,
+		ALQUILER_CUATRI,
+		ALQUILER_MES,
+		TOTAL_PAGOS,
+		TOTAL_ALTAS_ALQUILER,
+		CANTIDAD_INCUMPLIMIENTOS,
+		TOTAL_INCREMENTO
+	)
+	SELECT 
+		ALQUILER_SUCURSAL,
+		INMUEBLE_BARRIO,
+		DATA_TEAM.ObtenerRangoEtario(INQUILINO_FECHA_NAC),
+		ANUNCIO_MONEDA,
+		ANUNCIO_TIPO_OPERACION,
+		YEAR(ALQUILER_FECHA_INICIO),
+		DATA_TEAM.Calcular_cuatri(ALQUILER_FECHA_INICIO),
+		MONTH(ALQUILER_FECHA_INICIO),
+		SUM(PAGO_ALQUILER_IMPORTE)
+	FROM DATA_TEAM.Alquiler
+	JOIN DATA_TEAM.Anuncio ON ALQUILER_ANUNCIO = ANUNCIO_CODIGO
+	JOIN DATA_TEAM.Inmueble ON ANUNCIO_INMUEBLE = INMUEBLE_CODIGO
+	JOIN DATA_TEAM.Inquilino ON ALQUILER_INQUILINO = INQUILINO_DNI
+	JOIN DATA_TEAM.Pago_alquiler ON PAGO_ALQUILER_ALQ = ALQUILER_CODIGO
+END
+GO
+
 ------------------- Creacion de vistas
 
  ---------------  1 
@@ -391,6 +425,9 @@ según el tipo de operación (alquiler, venta, etc), barrio y ambientes para cad
 cuatrimestre de cada año. Se consideran todos los anuncios que se dieron de alta
 en ese cuatrimestre. La duración se calcula teniendo en cuenta la fecha de alta y
 la fecha de ﬁnalización.*/
+
+-- TOMA DE DECISION: Empleo la función COALESCE para gestionar los anuncios que no han concluido su publicación. En caso de que la fecha de finalización (ANUNCIO_FECHA_FINALIZACION) sea NULL, lo que indica que el anuncio está activo, se considera la fecha actual del sistema (GETDATE()) para calcular la duración hasta la fecha presente del anuncio en curso.
+
 GO
 CREATE VIEW VistaDuracionPromedio AS
 SELECT
@@ -400,21 +437,9 @@ SELECT
     ANUNCIO_AMBIENTES AS Ambientes,
     ANUNCIO_ANIO AS Anio,
     ANUNCIO_CUATRI AS Cuatrimestre,
-    DATEDIFF(day, Fecha_Alta, Fecha_Finalizacion) AS DuracionEnDias,
-    AVG(DATEDIFF(day, Fecha_Alta, Fecha_Finalizacion)) AS DuracionPromedioEnDias
-FROM (
-    SELECT
-        ANUNCIO_CODIGO,
-        ANUNCIO_TIPO_OPERACION,
-        ANUNCIO_BARRIO,
-        ANUNCIO_AMBIENTES,
-        ANUNCIO_ANIO,
-        ANUNCIO_CUATRI,
-        ANUNCIO_FECHA_ALTA AS Fecha_Alta,
-        ANUNCIO_FECHA_FINALIZACION AS Fecha_Finalizacion
-    FROM
-        DATA_TEAM.BI_H_ANUNCIO
-) AS Anuncios
+    DATEDIFF(day, ANUNCIO_FECHA_PUBLICACION, COALESCE(ANUNCIO_FECHA_FINALIZACION, GETDATE())) AS DuracionEnDias,
+    AVG(DATEDIFF(day, ANUNCIO_FECHA_PUBLICACION, COALESCE(ANUNCIO_FECHA_FINALIZACION, GETDATE()))) AS DuracionPromedioEnDias
+FROM DATA_TEAM.Anuncio
 GROUP BY
     ANUNCIO_CODIGO,
     ANUNCIO_TIPO_OPERACION,
@@ -423,13 +448,13 @@ GROUP BY
     ANUNCIO_ANIO,
     ANUNCIO_CUATRI;
 
-
  ---------------  2 
  /* Precio promedio de los anuncios de inmuebles según el tipo de operación
 (alquiler, venta, etc), tipo de inmueble y rango m2 para cada cuatrimestre/año.
 Se consideran todos los anuncios que se dieron de alta en ese cuatrimestre. El
 precio se debe expresar en el tipo de moneda que corresponda, identiﬁcando de
 cuál se trata.*/
+
 GO
 CREATE VIEW VistaPrecioPromedio AS
 SELECT
@@ -455,6 +480,7 @@ GROUP BY
 inquilinos para cada cuatrimestre/año. Se calcula en función de los alquileres
 dados de alta en dicho periodo.*/
 
+-- Considerar solo los alquileres dados de alta en dicho periodo
   CREATE VIEW Top5BarriosAlquiler AS
 SELECT
     TOP 5 WITH TIES
@@ -481,6 +507,7 @@ ORDER BY
 /* Porcentaje de incumplimiento de pagos de alquileres en término por cada
 mes/año. Se calcula en función de las fechas de pago y fecha de vencimiento del
 mismo. El porcentaje es en función del total de pagos en dicho periodo.*/
+
 CREATE VIEW PorcentajeIncumplimientoPagos AS
 SELECT
     A.ALQUILER_CODIGO,
@@ -529,15 +556,15 @@ y sucursal para cada cuatrimestre/año. Se calcula en función de los alquileres
 ventas concretadas dentro del periodo. 
  COALESCE DEVUELVE EL PRIMER ELEMENTO NO NULL entre ellos dos*/
     SELECT 
-    CASE 
-        WHEN V.VENTA_TIPO_OPERACION IS NOT NULL THEN 'Venta'
-        WHEN A.ALQUILER_TIPO_OPERACION IS NOT NULL THEN 'Alquiler'
-        ELSE 'Otro' 
-    END AS Tipo_Operacion,
-    COALESCE(V.VENTA_SUCURSAL, A.ALQUILER_SUCURSAL) AS Sucursal,
-    COALESCE(V.VENTA_ANIO, A.ALQUILER_ANIO) AS Anio,
-    COALESCE(V.VENTA_CUATRI, A.ALQUILER_CUATRI) AS Cuatrimestre,
-    AVG(COALESCE(V.TOTAL_COMISION, A.TOTAL_PAGOS)) AS Promedio_Comision
+        CASE 
+            WHEN V.VENTA_TIPO_OPERACION IS NOT NULL THEN 'Venta'
+            WHEN A.ALQUILER_TIPO_OPERACION IS NOT NULL THEN 'Alquiler'
+            ELSE 'Otro' 
+        END AS Tipo_Operacion,
+        COALESCE(V.VENTA_SUCURSAL, A.ALQUILER_SUCURSAL) AS Sucursal,
+        COALESCE(V.VENTA_ANIO, A.ALQUILER_ANIO) AS Anio,
+        COALESCE(V.VENTA_CUATRI, A.ALQUILER_CUATRI) AS Cuatrimestre,
+        AVG(COALESCE(V.TOTAL_COMISION, A.TOTAL_PAGOS)) AS Promedio_Comision
 FROM DATA_TEAM.BI_H_VENTA V
 FULL JOIN DATA_TEAM.BI_H_ALQUILER A
     ON V.VENTA_SUCURSAL = A.ALQUILER_SUCURSAL
@@ -555,7 +582,7 @@ GROUP BY
 ORDER BY Anio, Cuatrimestre, Sucursal, Tipo_Operacion;
 
     ---------------  7
-    /* Cantidad de anuncios por tipo de inmueble, tipo de operación y rango de
+   
 
 /* 
 DROP TABLE DATA_TEAM.BI_D_AMBIENTES
