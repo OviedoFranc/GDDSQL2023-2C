@@ -799,3 +799,62 @@ EXEC MigrarInquilino
 EXEC MigrarAlquiler
 EXEC MigrarPagoAlquiler
 EXEC MigrarDetalleAlquiler
+
+
+/*
+DROP PROCEDURE MigrarInmueble;
+DROP PROCEDURE MigrarInmuebleCaracteristica;
+DROP PROCEDURE MigrarPropietario;
+DROP PROCEDURE MigrarAnuncio;
+DROP PROCEDURE MigrarAgente;
+DROP PROCEDURE MigrarSucursal;
+DROP PROCEDURE MigrarVenta;
+DROP PROCEDURE MigrarComprador;
+DROP PROCEDURE MigrarPagoVenta;
+DROP PROCEDURE MigrarAlquiler;
+DROP PROCEDURE MigrarInquilino;
+DROP PROCEDURE MigrarPagoAlquiler;
+DROP PROCEDURE MigrarDetalleAlquiler;
+
+*/
+
+/*
+-- Eliminar las llaves foráneas que hacen referencia a otras tablas
+ALTER TABLE DATA_TEAM.Inmueble DROP CONSTRAINT FK_Barrio;
+ALTER TABLE DATA_TEAM.Inmueble DROP CONSTRAINT FK_Localidad;
+ALTER TABLE DATA_TEAM.Sucursal DROP CONSTRAINT FK_Sucursal_Localidad;
+ALTER TABLE DATA_TEAM.Barrio DROP CONSTRAINT FK_Localidad;
+
+-- Eliminar las tablas con dependencias
+DROP TABLE DATA_TEAM.Inmueble;
+DROP TABLE DATA_TEAM.Sucursal;
+DROP TABLE DATA_TEAM.Barrio;
+DROP TABLE DATA_TEAM.Localidad;
+DROP TABLE DATA_TEAM.Provincia;
+
+-- Eliminar las restantes tablas
+DROP TABLE DATA_TEAM.Pago_venta;
+DROP TABLE DATA_TEAM.Pago_alquiler;
+DROP TABLE DATA_TEAM.Detalle_Alquiler;
+DROP TABLE DATA_TEAM.Alquiler;
+DROP TABLE DATA_TEAM.Venta;
+DROP TABLE DATA_TEAM.Anuncio;
+DROP TABLE DATA_TEAM.Agente;
+DROP TABLE DATA_TEAM.Inmueble_Caracteristica;
+DROP TABLE DATA_TEAM.Comprador;
+DROP TABLE DATA_TEAM.Propietario;
+DROP TABLE DATA_TEAM.Inquilino;
+DROP TABLE DATA_TEAM.Alquiler_estado;
+DROP TABLE DATA_TEAM.Medio_pago;
+DROP TABLE DATA_TEAM.Tipo_operacion;
+DROP TABLE DATA_TEAM.Moneda;
+DROP TABLE DATA_TEAM.Estado_anuncio;
+DROP TABLE DATA_TEAM.Tipo_periodo;
+DROP TABLE DATA_TEAM.Tipo_inmueble;
+DROP TABLE DATA_TEAM.Disposicion;
+DROP TABLE DATA_TEAM.Orientacion;
+DROP TABLE DATA_TEAM.Cant_ambientes;
+*/
+/*
+DROP SCHEMA DATA_TEAM;
+*/
