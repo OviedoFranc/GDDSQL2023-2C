@@ -543,7 +543,7 @@ GO
 
 ------------------- Creacion de vistas
 
- ---------------  1   ---- ok
+ ---------------  1 
 /*Duración promedio (en días) que se encuentran publicados los anuncios
 según el tipo de operación (alquiler, venta, etc), barrio y ambientes para cada
 cuatrimestre de cada año. Se consideran todos los anuncios que se dieron de alta
@@ -569,7 +569,7 @@ CREATE VIEW DATA_TEAM.VistaDuracionPromedio AS
 GO
 
 
- ---------------  2                 ---- ok
+ ---------------  2
  /* Precio promedio de los anuncios de inmuebles según el tipo de operación
 (alquiler, venta, etc), tipo de inmueble y rango m2 para cada cuatrimestre/año.
 Se consideran todos los anuncios que se dieron de alta en ese cuatrimestre. El
@@ -600,7 +600,6 @@ CREATE VIEW DATA_TEAM.VistaPrecioPromedio AS
 inquilinos para cada cuatrimestre/año. Se calcula en función de los alquileres
 dados de alta en dicho periodo.*/
 
--- Considerar solo los alquileres dados de alta en dicho periodo
 GO
 CREATE VIEW DATA_TEAM.Top5BarriosAlquiler AS
 SELECT
@@ -623,7 +622,7 @@ ORDER BY
 GO
 
 
-    ---------------  4          -------- VERIFICAR
+    ---------------  4
 /* Porcentaje de incumplimiento de pagos de alquileres en término por cada
 mes/año. Se calcula en función de las fechas de pago y fecha de vencimiento del
 mismo. El porcentaje es en función del total de pagos en dicho periodo.*/
@@ -640,7 +639,7 @@ GROUP BY
     PAGO_ALQUILER_ANIO,
     PAGO_ALQUILER_MES;
 
-    ---------------  5 --------- ok 
+    ---------------  5
 /* Porcentaje promedio de incremento del valor de los alquileres para los
 contratos en curso por mes/año. Se calcula tomando en cuenta el último pago
 con respecto al del mes en curso, únicamente de aquellos alquileres que hayan
@@ -684,7 +683,7 @@ GROUP BY
 y sucursal para cada cuatrimestre/año. Se calcula en función de los alquileres y
 ventas concretadas dentro del periodo. 
 */
---- Le falta a la comision dividirla por la cantidad de operaciones del venta y alquiler en dicha fecha
+
 GO
 CREATE VIEW DATA_TEAM.ValorPromedioComision AS
     SELECT 
@@ -745,7 +744,7 @@ GROUP BY
 GO
 
 
--- ** Ejecución de la migración por pasos **
+-- ** Ejecución de la migración por pasos, en orden para respetar las Constraints **
 
 -- Paso 1: Migración de las tablas Dimensionales:
 EXEC DATA_TEAM.MIGRAR_D_TIEMPO
